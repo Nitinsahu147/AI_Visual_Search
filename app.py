@@ -1,63 +1,68 @@
-from flask import Flask, render_template, request, jsonify, send_from_directory
-import pandas as pd
-import numpy as np
 import os
-import tensorflow as tf
-from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input
+import numpy as np
+import pandas as pd
+from flask import Flask, request, render_template, jsonify
+from tensorflow.keras.applications import MobileNetV2
+from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 from tensorflow.keras.preprocessing import image
-from tensorflow.keras.models import Model
+from sklearn.neighbors import NearestNeighbors
 
+# -----------------------------
+# Load pre-trained MobileNetV2
+# -----------------------------
+model = MobileNetV2(weights="imagenet", include_top=False, pooling="avg")
+
+# -----------------------------
+# Load dataset features & metadata
+# -----------------------------
+features = np.load("features.npy")  # Precomputed dataset features
+df = pd.read_csv("metadata.csv")    # Your dataset metadata (image paths, names, etc.)
+
+# Fit Nearest Neighbors model on precomputed features
+nn_model = NearestNeighbors(n_neighbors=5, metric="cosine")
+nn_model.fit(features)
+
+# -----------------------------
+# Flask App
+# -----------------------------
 app = Flask(__name__)
 
-# ✅ Load dataset + features
-df = pd.read_csv("images.csv")
-features = np.load("features.npy")
+def extract_features(img_path):
+    """Extract feature vector from uploaded image using MobileNetV2"""
+    img = image.load_img(img_path, target_size=(224, 224))
+    x = image.img_to_array(img)
+    x = np.expand_dims(x, axis=0)
+    x = preprocess_input(x)
+    feat = model.predict(x)
+    return feat.flatten()
 
-# ✅ Prepare model for query images
-base_model = ResNet50(weights="imagenet", include_top=False, pooling="avg")
-model = Model(inputs=base_model.input, outputs=base_model.output)
-
-# ✅ Kaggle images directory
-DATASET_IMAGES = os.path.expanduser("~/.cache/kagglehub/datasets/paramaggarwal/fashion-product-images-small/versions/1/images")
-
-def cosine_similarity(a, b):
-    return np.dot(a, b.T) / (np.linalg.norm(a) * np.linalg.norm(b))
-
-@app.route("/")
-def index():
+@app.route("/", methods=["GET"])
+def home():
     return render_template("index.html")
 
 @app.route("/search", methods=["POST"])
 def search():
-    file = request.files["query_image"]
-    if not file:
-        return jsonify({"error": "No file uploaded"})
+    if "file" not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
 
-    file_path = "static/temp_query.jpg"
-    file.save(file_path)
+    file = request.files["file"]
+    filepath = os.path.join("uploads", file.filename)
+    os.makedirs("uploads", exist_ok=True)
+    file.save(filepath)
 
-    # Extract query features
-    img = image.load_img(file_path, target_size=(224, 224))
-    x = image.img_to_array(img)
-    x = np.expand_dims(x, axis=0)
-    x = preprocess_input(x)
-    query_feat = model.predict(x, verbose=0)[0]
+    try:
+        # Extract features
+        query_feat = extract_features(filepath)
 
-    # Compare with precomputed features
-    sims = [cosine_similarity(query_feat, feat) for feat in features]
-    top_idx = np.argsort(sims)[::-1][:5]
+        # Find similar images
+        distances, indices = nn_model.kneighbors([query_feat])
+        results = df.iloc[indices[0]].to_dict(orient="records")
 
-    results = df.iloc[top_idx].copy()
-    results["similarity"] = [sims[i] for i in top_idx]
+        return jsonify({"results": results})
 
-    # ✅ Send clean data
-    results = results[["id", "gender", "masterCategory", "productDisplayName", "image", "similarity"]]
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-    return jsonify(results.to_dict(orient="records"))
-
-@app.route("/images/<path:filename>")
-def serve_image(filename):
-    return send_from_directory(DATASET_IMAGES, filename)
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
