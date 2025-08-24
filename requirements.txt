@@ -3,8 +3,3 @@ opencv-python
 tensorflow
 numpy
 pandas
-gunicorn
-scikit-learn
-kagglehub
-pillow
-opencv-python
