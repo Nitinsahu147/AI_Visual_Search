@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VOGUE AI - Visual Search</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Montserrat:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-black: #0a0a0a;
+            --luxury-gold: #d4af37;
+            --rose-gold: #E8B4B8;
+            --deep-purple: #6B46C1;
+            --electric-blue: #00D9FF;
+            --neon-pink: #FF10F0;
+            --soft-cream: #FFF8E7;
+            --dark-gray: #1a1a1a;
+            --gradient-luxury: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-gold: linear-gradient(135deg, #F2994A 0%, #F2C94C 100%);
+            --gradient-neon: linear-gradient(135deg, #FA8BFF 0%, #2BD2FF 52%, #2BFF88 90%);
+            --gradient-dark: linear-gradient(135deg, #0F0C29 0%, #302B63 50%, #24243e 100%);
+            --gradient-sunset: linear-gradient(135deg, #FA8BFF 0%, #FFD89B 100%);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: #000;
+            min-height: 100vh;
+            color: #fff;
+            overflow-x: hidden;
+        }
+        
+        /* Animated Luxury Background */
+        .luxury-bg {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -2;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 25%, #2d1b69 50%, #0f0f0f 75%, #000 100%);
+            background-size: 400% 400%;
+            animation: luxuryGradient 20s ease infinite;
+        }
+        
+        .particles {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: var(--luxury-gold);
+            border-radius: 50%;
+            animation: float-up 15s infinite linear;
+            opacity: 0;
+        }
+        
+        @keyframes float-up {
+            0% {
+                opacity: 0;
+                transform: translateY(100vh) scale(0);
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100vh) scale(1.5);
+            }
+        }
+        
+        @keyframes luxuryGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        /* Navbar Styles */
+        .navbar {
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+            padding: 20px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .navbar-brand {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 2.5rem;
+            letter-spacing: 3px;
+            background: linear-gradient(90deg, var(--luxury-gold), #fff, var(--rose-gold));
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 3s linear infinite;
+            text-decoration: none;
+        }
+        
+        @keyframes shine {
+            to {
+                background-position: 200% center;
+            }
+        }
+        
+        .nav-link {
+            color: #fff !important;
+            margin: 0 20px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 2px;
+            background: var(--luxury-gold);
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            color: var(--luxury-gold) !important;
+            transform: translateY(-2px);
+        }
+        
+        .nav-link:hover::before {
+            width: 100%;
+        }
+        
+        .user-profile {
+            padding: 0 !important;
+            margin: 0 10px !important;
+            display: flex;
+            align-items: center;
+        }
+
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: 2px solid var(--luxury-gold);
+            transition: all 0.3s ease;
+            object-fit: cover;
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
+        }
+
+        .nav-link i.fa-shopping-cart {
+            margin-right: 5px;
+            color: var(--luxury-gold);
+        }
+        
+        /* Hero Section */
+        .hero-section {
+            padding: 120px 0 80px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 4rem;
+            font-weight: 900;
+            letter-spacing: -2px;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff 0%, var(--luxury-gold) 50%, #fff 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 4s linear infinite, slideInDown 1s ease;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 300;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            animation: fadeIn 1s ease 0.5s both;
+            margin-bottom: 40px;
+        }
+        
+        @keyframes slideInDown {
+            from {
+                transform: translateY(-100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Search Form Styles */
+        .search-container {
+            max-width: 800px;
+            margin: 60px auto;
+            position: relative;
+            animation: fadeInUp 1s ease 0.8s both;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        #searchForm {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 30px;
+            padding: 30px 40px;
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            transition: all 0.4s ease;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+        
+        #searchForm:hover {
+            transform: translateY(-5px);
+            border-color: var(--luxury-gold);
+            box-shadow: 0 20px 60px rgba(212, 175, 55, 0.3);
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+            opacity: 0;
+        }
+        
+        .file-input-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px dashed rgba(212, 175, 55, 0.3);
+            border-radius: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+            font-weight: 300;
+        }
+        
+        .file-input-label:hover {
+            border-color: var(--luxury-gold);
+            background: rgba(212, 175, 55, 0.1);
+            color: var(--luxury-gold);
+            transform: translateY(-2px);
+        }
+        
+        .search-btn {
+            background: var(--gradient-gold);
+            border: none;
+            color: var(--primary-black);
+            padding: 15px 40px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(212, 175, 55, 0.4);
+            font-size: 1rem;
+            align-self: center;
+            min-width: 200px;
+        }
+        
+        .search-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.6);
+        }
+        
+        /* Query Preview Styles */
+        .query-preview-container {
+            text-align: center;
+            margin: 40px auto;
+            max-width: 600px;
+        }
+        
+        .query-preview-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            color: var(--luxury-gold);
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+        
+        #queryPreview {
+            max-width: 300px;
+            max-height: 300px;
+            border-radius: 20px;
+            border: 2px solid var(--luxury-gold);
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
+            transition: all 0.3s ease;
+            object-fit: contain;
+        }
+        
+        #queryPreview:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(212, 175, 55, 0.5);
+        }
+        
+        /* Results Grid - Luxury Style */
+        .results {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-top: 60px;
+            justify-content: center;
+            padding: 0 20px;
+        }
+        
+        .card {
+            width: 280px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            transition: all 0.4s ease;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+        }
+        
+        .card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 30px 60px rgba(212, 175, 55, 0.3);
+            border-color: var(--luxury-gold);
+        }
+        
+        .result-img {
+            width: 100%;
+            height: 300px;
+            object-fit: contain;
+            border-radius: 10px;
+            transition: transform 0.6s ease;
+            opacity: 0.9;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d1b69 100%);
+        }
+        
+        .card:hover .result-img {
+            transform: scale(1.1);
+            opacity: 1;
+        }
+        
+        .result-info {
+            padding: 25px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+        
+        .result-info h4 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 15px;
+            line-height: 1.3;
+        }
+        
+        .result-info p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            font-weight: 300;
+        }
+        
+        .similarity-badge {
+            display: inline-block;
+            background: var(--gradient-gold);
+            color: var(--primary-black);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 10px;
+        }
+        
+        /* Footer */
+        .footer {
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(212, 175, 55, 0.3);
+            padding: 80px 0 40px;
+            margin-top: 120px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 60px;
+        }
+
+        .footer-section h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            color: var(--luxury-gold);
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .footer-section p, .footer-section a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            line-height: 1.8;
+            font-size: 0.9rem;
+            font-weight: 300;
+            transition: color 0.3s ease;
+        }
+
+        .footer-section a:hover {
+            color: var(--luxury-gold);
+        }
+
+        .footer-section ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 10px;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .social-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 50%;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .social-links a:hover {
+            background: var(--luxury-gold);
+            color: var(--primary-black);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(212, 175, 55, 0.4);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 40px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-bottom p {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.85rem;
+            margin: 0;
+        }
+        
+        /* Loading Animation */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(212, 175, 55, 0.3);
+            border-top: 3px solid var(--luxury-gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .navbar-brand {
+                font-size: 1.8rem;
+            }
+            
+            .results {
+                gap: 20px;
+            }
+            
+            .card {
+                width: 100%;
+                max-width: 350px;
+            }
+            
+            #searchForm {
+                margin: 20px;
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Luxury Background -->
+    <div class="luxury-bg"></div>
+    <div class="particles" id="particles"></div>
+    
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-crown"></i> VOGUE AI
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dash2.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="results.jsp">Discover</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="compare.jsp">Compare</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="wishlist.jsp">Wishlist</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="history.jsp">History</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="cart.jsp">
+                            <i class="fas fa-shopping-cart"></i> Cart
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link user-profile" href="/account.html">
+                            <img src="/remembering.webp" alt="User" class="user-avatar">
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <p class="hero-subtitle">AI-Powered Visual Fashion Discovery</p>
+            <h1 class="hero-title">AI Visual Search <i class="fas fa-search" style="color: var(--luxury-gold);"></i></h1>
+            
+            <!-- Search Form -->
+            <div class="search-container">
+                <form id="searchForm" enctype="multipart/form-data">
+                    <div class="file-input-wrapper">
+                        <input type="file" name="query_image" id="fileInput" required accept="image/*" />
+                        <label for="fileInput" class="file-input-label">
+                            <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: var(--luxury-gold);"></i>
+                            <span>Choose an image to find similar fashion items</span>
+                        </label>
+                    </div>
+                    <button type="submit" class="search-btn">
+                        <i class="fas fa-sparkles"></i> AI Search
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Query Preview -->
+    <div class="query-preview-container" style="display: none;">
+        <h3 class="query-preview-title">Your Search Image:</h3>
+        <img id="queryPreview" src="" alt="Query Image" />
+    </div>
+    
+    <!-- Loading Animation -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p style="color: var(--luxury-gold); font-size: 1.1rem;">AI is analyzing your image...</p>
+    </div>
+    
+    <!-- Results -->
+    <div class="container">
+        <div class="results" id="results"></div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>VOGUE AI</h3>
+                    <p>Revolutionizing luxury fashion discovery through artificial intelligence. Experience the future of personalized style curation.</p>
+                    <div class="social-links">
+                        <a href="#" title="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="#" title="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>Features</h3>
+                    <ul>
+                        <li><a href="#">AI Personal Stylist</a></li>
+                        <li><a href="#">Visual Search Engine</a></li>
+                        <li><a href="#">Trend Forecasting</a></li>
+                        <li><a href="#">Designer Collections</a></li>
+                        <li><a href="#">VIP Access</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Company</h3>
+                    <ul>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Press</a></li>
+                        <li><a href="#">Partnerships</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Support</h3>
+                    <ul>
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Cookie Policy</a></li>
+                        <li><a href="#">AI Guidelines</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 VOGUE AI. All rights reserved. Luxury Fashion Powered by Artificial Intelligence.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Bootstrap Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Create floating particles
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+        
+        // Initialize particles
+        createParticles();
+        
+        // Original functionality preserved
+        const form = document.getElementById("searchForm");
+        const resultsDiv = document.getElementById("results");
+        const queryPreview = document.getElementById("queryPreview");
+        const queryPreviewContainer = document.querySelector(".query-preview-container");
+        const loading = document.getElementById("loading");
+        const fileInput = document.getElementById("fileInput");
+        const fileLabel = document.querySelector(".file-input-label span");
+        
+        // Update file input label when file is selected
+        fileInput.addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name;
+            if (fileName) {
+                fileLabel.textContent = `Selected: ${fileName}`;
+                fileLabel.style.color = 'var(--luxury-gold)';
+            }
+        });
+        
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            
+            const fileInput = form.query_image.files[0];
+            if (!fileInput) return;
+            
+            // Show query preview
+            queryPreview.src = URL.createObjectURL(fileInput);
+            queryPreviewContainer.style.display = 'block';
+            
+            // Show loading
+            loading.classList.add('show');
+            resultsDiv.innerHTML = "";
+            
+            try {
+                const formData = new FormData(form);
+                const res = await fetch("/search", { method: "POST", body: formData });
+                const data = await res.json();
+                
+                // Hide loading
+                loading.classList.remove('show');
+                
+                // Display results
+                resultsDiv.innerHTML = "";
+                data.forEach(item => {
+                    const card = document.createElement("div");
+                    card.className = "card";
+                    card.innerHTML = `
+                        <img src="/images/${item.image}" alt="${item.productDisplayName}" class="result-img"/>
+                        <div class="result-info">
+                            <h4>${item.productDisplayName || "Unnamed Item"}</h4>
+                            <p><i class="fas fa-tag" style="color: var(--luxury-gold);"></i> Category: ${item.masterCategory}</p>
+                            <p><i class="fas fa-user" style="color: var(--luxury-gold);"></i> Gender: ${item.gender}</p>
+                            <span class="similarity-badge">
+                                <i class="fas fa-percentage"></i> ${(item.similarity * 100).toFixed(2)}% Match
+                            </span>
+                        </div>
+                    `;
+                    resultsDiv.appendChild(card);
+                });
+                
+                // Scroll to results
+                if (data.length > 0) {
+                    resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+                
+            } catch (error) {
+                loading.classList.remove('show');
+                console.error('Search error:', error);
+                resultsDiv.innerHTML = `
+                    <div style="text-align: center; color: var(--luxury-gold); padding: 40px;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 20px;"></i>
+                        <p style="font-size: 1.2rem;">Search failed. Please try again.</p>
+                    </div>
+                `;
+            }
+        };
+    </script>
+</body>
+</html>
